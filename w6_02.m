@@ -1,6 +1,6 @@
 %Q3
 clear
-
+% initial data
 msg = '<ding yalei><ydin0002@student.monash.edu>';
 
 msg_h = dec2hex(msg);
@@ -11,46 +11,107 @@ msg_b = msg_b(:);
 
 msg_bn = uint8(msg_b - '0');
 
+%cal
+bits = dec2bin(msg) - '0';
+%crc 
+poly = [1 de2bi(hex2dec('EDB88320'), 32)]';
+bits = bits(:);
 
-g(33 : -1 : 1) = [1, 0 0 0 0 0 1 0 0, 1 1 0 0 0 0 0 1, 0 0 0 1 1 1 0 1, 1 0 1 1 0 1 1 1];
-g = g(33 : -1 : 1);
-g = g(:);
-d = msg_bn;
-[sizeg, t] = size(g);
-c = zeros(sizeg - 1, 1);
+bits(1:32) = 1 - bits(1:32);% flip first 32 bits
+bits = [bits; zeros(32,1)];
 
-for i = 1 : (size(d) - sizeg + 2)
-    disp(d');
-    temp = bitxor(uint8(g), d(1 : sizeg, 1));
-    
-    c = temp(2 : sizeg, 1);
-    disp(temp');
-    check1 = find(temp, 1, 'first');
-    %shl
-    if(size(check1) == 1)
-        dd = [temp(check1 : sizeg, 1); d(sizeg + 1 : size(d), 1);  zeros(check1 - 1, 1)];
-    else
-        dd =  [ d(sizrg + 1 :  size(msg), 1);  zeros(sizeg, 1)];
+rem = zeros(32,1);%remainder to 0
+for i = 1:length(bits)
+    rem = [rem; bits(i)]; 
+    if rem(1) == 1
+        rem = bitxor(uint8(rem), uint8(poly)); % mod(rem + poly, 2)
     end
-    d = dd;
-    if check1 > 1
-        i = i + check1 - 1;
-    end
+    rem = rem(2:33);
 end
 
-crc = [c(2 : sizeg - 1, 1); 0];
 
+ret = 1 - rem;% flip the remainder
+%ret = rem;
 
+crcans1 = ret;
+c1 =crcans1;
 
+%remainer to hex
+for i = 1 : 8
+    a = c1(i * 4 - 3 : i * 4, 1)';
+    temp = dec2hex(bin2dec(num2str(a)));
+    %disp(temp);
+    crch1(i, 1) = temp;
+end
+crch1 = crch1';
+disp(crch1);
 
+%Q4
+temp = (dec2bin(msg) - '0');
+temp = temp(:);
+dat = [uint8(temp); uint8(crcans1)];
+%crc 
+bits = dat;
+poly = [1 de2bi(hex2dec('EDB88320'), 32)]';
+bits = bits(:);
 
+bits(1:32) = 1 - bits(1:32);% flip first 32 bits
+bits = [bits; zeros(32,1)];
 
-
-crcd5 = int64(0);
-c5 = c(size(c) : -1 : 1);
-
-for i = 1 : size(c5)
-    crcd5 = crcd5 * 2 + int64(c5(i, 1));
+rem = zeros(32,1);%remainder to 0
+for i = 1:length(bits)
+    rem = [rem; bits(i)]; 
+    if rem(1) == 1
+        rem = bitxor(uint8(rem), uint8(poly)); % mod(rem + poly, 2)
+    end
+    rem = rem(2:33);
 end
 
-crch5 = dec2hex(crcd5);
+crcans2 = rem;
+
+c2 = crcans2;
+crch2 = num2str(zeros(8, 1));
+% to hex
+for i = 1 : 8
+    a = c2(i * 4 - 3 : i * 4, 1)';
+    temp = dec2hex(bin2dec(num2str(a)));
+    %disp(temp);
+    crch2(i, 1) = temp;
+end
+crch2 = crch2';
+disp(crch2);
+
+
+%Q5
+bits = dat;
+bits(319, 1) = 0; 
+%bits(7, 1) = 1; remainer is still C704DD7B
+poly = [1 de2bi(hex2dec('EDB88320'), 32)]';
+bits = bits(:);
+
+bits(1:32) = 1 - bits(1:32);% flip first 32 bits
+bits = [bits; zeros(32,1)];
+
+rem = zeros(32,1);%remainder to 0
+for i = 1:length(bits)
+    rem = [rem; bits(i)]; 
+    if rem(1) == 1
+        rem = bitxor(uint8(rem), uint8(poly)); % mod(rem + poly, 2)
+    end
+    rem = rem(2:33);
+end
+
+crcans3 = rem;
+
+c3 = crcans3;
+crch3 = num2str(zeros(8, 1));
+% to hex
+for i = 1 : 8
+    a = c3(i * 4 - 3 : i * 4, 1)';
+    temp = dec2hex(bin2dec(num2str(a)));
+    crch3(i, 1) = temp;
+end
+crch3 = crch3';
+disp(crch3);
+
+
